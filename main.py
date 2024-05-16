@@ -1,42 +1,56 @@
 #!/usr/bin/python3
-import RPi.GPIO as GPIO
+import os
 import time
-import logging
 
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(23, GPIO.OUT)
+# Constants
+TEMP_SENSOR_PATH = '/sys/bus/iio/devices/iio:device0/in_temp_input'
+HUMIDITY_SENSOR_PATH = '/sys/bus/iio/devices/iio:device0/in_humidityrelative_input'
+PRESSURE_SENSOR_PATH = '/sys/bus/iio/devices/iio:device0/in_pressure_input'
+INTERVAL_IN_S = 10.0
+LED_PIN = 23
 
-interval_in_s = 10.0
+def read_sensor(sensor_path):
+    """Read sensor value from file."""
+    with open(sensor_path, 'r') as sensor_file:
+        return sensor_file.read().strip()
 
-while True:
+def convert_temperature(temp_str):
+    """Convert temperature from millidegrees Celsius to Celsius and Fahrenheit."""
+    temp_celsius = float(temp_str) / 1000
+    temp_fahrenheit = 1.8 * temp_celsius + 32
+    return temp_celsius, temp_fahrenheit
+
+def set_led_state(led_pin, state):
+    """Set LED state using pigs command."""
+    os.system(f"pigs w {led_pin} {state}")
+
+def main():
+    """Main function."""
     try:
-        with open('/sys/bus/iio/devices/iio:device0/in_temp_input', 'r') as temp_file:
-            temp = temp_file.read().strip()
-        with open('/sys/bus/iio/devices/iio:device0/in_humidityrelative_input', 'r') as humidityrelative_file:
-            humidityrelative = humidityrelative_file.read().strip()
-        with open('/sys/bus/iio/devices/iio:device0/in_pressure_input', 'r') as pressure_file:
-            pressure = pressure_file.read().strip()
+        while True:
+            temp = read_sensor(TEMP_SENSOR_PATH)
+            humidityrelative = read_sensor(HUMIDITY_SENSOR_PATH)
+            pressure = read_sensor(PRESSURE_SENSOR_PATH)
 
-        if float(temp) > 25000:
-            GPIO.output(23, GPIO.HIGH)
-        else:
-            GPIO.output(23, GPIO.LOW)
+            if float(temp) > 25000:
+                set_led_state(LED_PIN, 1)  # Turn LED on
+            else:
+                set_led_state(LED_PIN, 0)  # Turn LED off
 
-        state = "an" if GPIO.input(23) else "aus"
+            celsius, fahrenheit = convert_temperature(temp)
 
-        print(f'======= {time.strftime("%d.%m.%y %H:%M:%S") }=======')
+            print(f'======= {time.strftime("%d.%m.%y %H:%M:%S") }=======')
+            print("Temperature: {:.2f}°C".format(celsius))
+            print("Temperature: {:.2f}°F".format(fahrenheit))
+            print("Humidity: {}% r.F.".format(int(float(humidityrelative) / 1000)))
+            print("Pressure: {}hPa".format(int(float(pressure) * 10)))
+            print("\n")
 
-        print("Temperatur: " + str(float(temp) / 1000) + "°C")
-
-        print("Luftfeuchtigkeit: " + str(int(float(humidityrelative) / 1000)) + "% r.F.")
-
-        print("Luftdruck: " + str(int(float(pressure) * 10)) + "hPa")
-
-        print("\n")
-
-        time.sleep(interval_in_s)
+            time.sleep(INTERVAL_IN_S)
 
     except Exception as e:
-        GPIO.output(23, GPIO.LOW)
-        logging.error("Failed to read and log file: %s", e)
+        set_led_state(LED_PIN, 0)  # Turn LED off
+        print("Failed to read and log file: %s", e)
+
+if __name__ == "__main__":
+    main()
