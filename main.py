@@ -7,7 +7,7 @@ TEMP_SENSOR_PATH = '/sys/bus/iio/devices/iio:device0/in_temp_input'
 HUMIDITY_SENSOR_PATH = '/sys/bus/iio/devices/iio:device0/in_humidityrelative_input'
 PRESSURE_SENSOR_PATH = '/sys/bus/iio/devices/iio:device0/in_pressure_input'
 INTERVAL_IN_S = 10.0
-LED_PIN = 23
+FAN_PIN = 23
 
 def read_sensor(sensor_path):
     """Read sensor value from file."""
@@ -20,9 +20,9 @@ def convert_temperature(temp_str):
     temp_fahrenheit = 1.8 * temp_celsius + 32
     return temp_celsius, temp_fahrenheit
 
-def set_led_state(led_pin, state):
-    """Set LED state using pigs command."""
-    os.system(f"pigs w {led_pin} {state}")
+def set_fan_state(fan_pin, state):
+    """Set FAN state using pigs command."""
+    os.system(f"pigs w {fan_pin} {state}")
 
 def main():
     """Main function."""
@@ -33,9 +33,9 @@ def main():
             pressure = read_sensor(PRESSURE_SENSOR_PATH)
 
             if float(temp) > 25000:
-                set_led_state(LED_PIN, 1)  # Turn LED on
+                set_fan_state(FAN_PIN, 1)  # Turn FAN on
             else:
-                set_led_state(LED_PIN, 0)  # Turn LED off
+                set_fan_state(FAN_PIN, 0)  # Turn FAN off
 
             celsius, fahrenheit = convert_temperature(temp)
 
@@ -49,8 +49,8 @@ def main():
             time.sleep(INTERVAL_IN_S)
 
     except Exception as e:
-        set_led_state(LED_PIN, 0)  # Turn LED off
-        print("Failed to read and log file: %s", e)
+        set_fan_state(FAN_PIN, 0)  # Turn FAN off
+        print("Faifan to read and log file: %s", e)
 
 if __name__ == "__main__":
     main()
