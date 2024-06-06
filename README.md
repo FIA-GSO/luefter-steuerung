@@ -3,8 +3,6 @@
 
 Dieses Python-Skript liest die Temperaturdaten von einem Sensor, der an einem Raspberry Pi angeschlossen ist, und steuert einen GPIO-Pin basierend auf den gelesenen Daten.
 
-Dieses Python-Skript liest die Temperaturdaten von einem Sensor, der an einem Raspberry Pi angeschlossen ist, und steuert einen GPIO-Pin basierend auf den gelesenen Daten.
-
 1. Zuerst wird der GPIO-Modus auf BCM gesetzt und der GPIO-Pin 23 als Ausgang konfiguriert.
 ```python
 GPIO.setmode(GPIO.BCM)
